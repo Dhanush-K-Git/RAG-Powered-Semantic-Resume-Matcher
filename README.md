@@ -33,7 +33,7 @@ The system follows a classic RAG (Retrieval-Augmented Generation) pipeline:
 ## 📦 Installation & Setup
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/YourUsername/RAG-Powered-Semantic-Resume-Matcher.git](https://github.com/YourUsername/RAG-Powered-Semantic-Resume-Matcher.git)
+   git clone [https://github.com/Dhanush-K-Git/RAG-Powered-Semantic-Resume-Matcher.git](https://github.com/Dhanush-K-Git/RAG-Powered-Semantic-Resume-Matcher.git)
 
 
 
