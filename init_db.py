@@ -1,48 +1,37 @@
 import os
 import chromadb
-from chromadb.utils import embedding_functions
+from sentence_transformers import SentenceTransformer
 from resume_parser import extract_text_from_pdf
 
-# 1. Setup Persistent Storage
-# This creates a folder 'resume_vault' where your vectors will live permanently
-client = chromadb.PersistentClient(path="./resume_vault")
+def run_indexing():
+    """Function to process all resumes and RESET the database memory"""
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    client = chromadb.PersistentClient(path="./resume_vault")
+    
+    # 1. THE ERASER: Delete the old collection to remove "Ghost" resumes
+    try:
+        client.delete_collection(name="resumes")
+    except:
+        pass # If it doesn't exist yet, that's fine
+    
+    # 2. THE FRESH START: Create a brand new, empty collection
+    collection = client.create_collection(name="resumes")
 
-# 2. Choose the Brain (Embedding Model)
-# We use 'all-MiniLM-L6-v2'. It's fast, popular, and runs locally.
-sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
-    model_name="all-MiniLM-L6-v2"
-)
+    resume_dir = "data/resumes"
+    if not os.path.exists(resume_dir):
+        return "No resumes found to index."
 
-# 3. Create a 'Collection' (Like a table in a database)
-# If it exists, we load it; if not, we create it.
-collection = client.get_or_create_collection(
-    name="resumes_collection", 
-    embedding_function=sentence_transformer_ef
-)
-
-def ingest_resumes(directory):
-    """Processes all PDFs in a folder and adds them to ChromaDB."""
-    for filename in os.listdir(directory):
+    count = 0
+    for filename in os.listdir(resume_dir):
         if filename.endswith(".pdf"):
-            path = os.path.join(directory, filename)
-            print(f"Vectorizing: {filename}...")
+            file_path = os.path.join(resume_dir, filename)
+            text = extract_text_from_pdf(file_path)
             
-            text = extract_text_from_pdf(path)
-            
-            if text:
-                # Add to ChromaDB with Metadata
-                # 'ids' must be unique. We use the filename.
-                collection.add(
-                    documents=[text],
-                    metadatas=[{"source": filename}],
-                    ids=[filename]
-                )
-                print(f"Done! {filename} is now in the database.")
-
-if __name__ == "__main__":
-    RESUME_PATH = "data/resumes"
-    if not os.path.exists(RESUME_PATH):
-        print(f"Error: Folder '{RESUME_PATH}' not found!")
-    else:
-        ingest_resumes(RESUME_PATH)
-        print(f"\nTotal resumes in database: {collection.count()}")
+            # Indexing into ChromaDB
+            collection.add(
+                documents=[text],
+                ids=[filename]
+            )
+            count += 1
+    
+    return f"Successfully indexed {count} resumes!"
