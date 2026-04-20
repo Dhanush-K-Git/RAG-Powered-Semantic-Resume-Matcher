@@ -110,10 +110,22 @@ if st.button("🔍 Rank Best Candidates", use_container_width=True):
                 
                 table_data = []
                 for i, r in enumerate(results):
-                    score_pct = f"{round(r['Match Score'] * 100, 2)}%"
+                    # 1. Get the raw score
+                    score_val = r.get('Match Score', 0)
+                    
+                    # 2. If it's already a string with a %, just use it
+                    if isinstance(score_val, str) and '%' in score_val:
+                        score_pct = score_val
+                    else:
+                        # 3. Otherwise, convert to float and format it
+                        try:
+                            score_pct = f"{round(float(score_val) * 100, 2)}%"
+                        except (ValueError, TypeError):
+                            score_pct = "0.0%"
+
                     table_data.append({
                         "Rank": i + 1,
-                        "Candidate Name": r["Candidate Name"],
+                        "Candidate Name": r.get("Candidate Name", "Unknown"),
                         "Match Score": score_pct
                     })
                 
