@@ -1,5 +1,6 @@
 # --- STEP 1: SQLITE MONKEY PATCH (CRITICAL FOR DEPLOYMENT) ---
 import sys
+import os 
 try:
     __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
